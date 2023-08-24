@@ -6,52 +6,65 @@ using TMPro;
 public class DuplicateNode : MonoBehaviour
 {
     public GameObject node;
-    public TMP_InputField userInputField; // Referência ao InputField do Unity onde o usuário digita o texto
+    public TMP_InputField userInputField; // Reference to the Unity InputField where the user types the text
 
     private Vector3 firstNodeVector;
-    private Vector3 lastNodeVector;
-    private Vector3 lastNodeVector2;
-    private int textCounter = 1;
-    private int textCounter2 = 1;
     private List<GameObject> nodeList = new List<GameObject>();
-    private Vector3 initialPosition; // Variável para armazenar a posição inicial de criação dos containers
+
+    private enum Insertion
+    {
+        FIRST,
+        LAST,
+        ORDERED
+    }
 
     void Start()
     {
         firstNodeVector = new Vector3(node.transform.position.x,
             node.transform.position.y, node.transform.position.z);
-        lastNodeVector = new Vector3(firstNodeVector.x, firstNodeVector.y, firstNodeVector.z);
-        lastNodeVector2 = new Vector3(firstNodeVector.x, firstNodeVector.y, firstNodeVector.z);
-        initialPosition = lastNodeVector; // Armazenar a posição inicial
     }
 
     void Update()
     {
-        // Verificar se o usuário pressionou "T" para criar o nó
+        // Check if the user pressed "T" to create the node
         if (Input.GetKeyDown(KeyCode.T))
         {
-            CreateNewNode();
+            CreateNewNode(Insertion.LAST);
         }
 
-        // Verificar se o usuário pressionou "R" para duplicar o nó do lado contrário
+        // Check if the user pressed "R" to duplicate the node on the opposite side
         if (Input.GetKeyDown(KeyCode.R))
         {
-            DuplicateNodeOpposite();
+            CreateNewNode(Insertion.FIRST);
+        }
+        if (Input.GetKeyDown(KeyCode.O))
+        {
+            CreateNewNode(Insertion.ORDERED);
         }
     }
 
-    private void CreateNewNode()
+    private void UpdateNodePosition()
     {
+        nodeList[0].transform.position = new Vector3(firstNodeVector.x, nodeList[0].transform.position.y, nodeList[0].transform.position.z);
+        for (int i = 1; i < nodeList.Count; i++)
+        {
+            nodeList[i].transform.position = new Vector3(nodeList[i - 1].transform.position.x - 0.659f, nodeList[i].transform.position.y, nodeList[i].transform.position.z);
+        }
+        
+        print("UpdateNodePosition["+0+"]: " + nodeList[0].name + " " + nodeList[0].transform.position.x + "\n"
+             + "UpdateNodePosition["+(nodeList.Count-1)+"]: " + nodeList[nodeList.Count-1].name + " " + nodeList[nodeList.Count-1].transform.position.x + "\n");
+    }
+
+    private void CreateNewNode(Insertion insertionType)
+    {
+        print("CreateNewNode\n");
         if (nodeList.Count == 10)
             ResetNodes();
 
-        if (textCounter >= 7)
-            return; // Remover todos os nós antes de reiniciar
-
-        GameObject newNode = Instantiate(node, lastNodeVector, Quaternion.identity);
+        GameObject newNode = Instantiate(node, firstNodeVector, Quaternion.identity);
         newNode.SetActive(true);
         newNode.transform.parent = transform;
-        newNode.name = "Node" + textCounter;
+        newNode.name = "Node" + nodeList.Count;
 
         TMP_Text newTextComponent = newNode.GetComponentInChildren<TMP_Text>();
         if (newTextComponent != null)
@@ -59,59 +72,40 @@ public class DuplicateNode : MonoBehaviour
             if (!string.IsNullOrEmpty(userInputField.text))
             {
                 newTextComponent.text = userInputField.text;
-                userInputField.text = ""; // Limpar o input após atribuir o texto ao nó
+                userInputField.text = "";
             }
             else
             {
-                newTextComponent.text = textCounter.ToString();
+                newTextComponent.text = nodeList.Count.ToString();
             }
         }
 
-        // Adicionar o novo objeto "container" na lista
-        nodeList.Add(newNode);
-
-        // Atualizar a posição para a próxima criação
-        lastNodeVector.x -= 0.659f;
-
-        // Incrementar o contador
-        textCounter++;
-    }
-
-    private void DuplicateNodeOpposite()
-    {
-        if (nodeList.Count == 10)
-            ResetNodes();
-
-        if(textCounter2 >= 5)
-            return;
-
-        GameObject newNode = Instantiate(node, lastNodeVector2, Quaternion.identity);
-        newNode.SetActive(true);
-        newNode.transform.parent = transform;
-        newNode.name = "Node" + textCounter2;
-
-        TMP_Text newTextComponent = newNode.GetComponentInChildren<TMP_Text>();
-        if (newTextComponent != null)
+        switch (insertionType)
         {
-            if (!string.IsNullOrEmpty(userInputField.text))
-            {
-                newTextComponent.text = userInputField.text;
-                userInputField.text = ""; // Limpar o input após atribuir o texto ao nó
-            }
-            else
-            {
-                newTextComponent.text = textCounter2.ToString();
-            }
+            case Insertion.FIRST:
+                nodeList.Insert(0, newNode);
+                break;
+            case Insertion.LAST:
+                nodeList.Add(newNode);
+                break;
+            case Insertion.ORDERED:
+                for (int i = 0; i < nodeList.Count; i++)
+                {
+                    TMP_Text textComponent = nodeList[i].GetComponentInChildren<TMP_Text>();
+                    if (textComponent != null && int.Parse(newTextComponent.text) < int.Parse(textComponent.text))
+                    {
+                        nodeList.Insert(i, newNode);
+                        break;
+                    }
+                }
+                break;
         }
 
-        nodeList.Add(newNode);
-
-        lastNodeVector2.x += 0.659f;
-
-        textCounter2++;
+        UpdateNodePosition();
+        Debug.Log("NewNode: " + newNode.name + " " + newNode.transform.position.x);
+        Debug.Log("nodeList[0]: " + nodeList[0].name + " " + nodeList[0].transform.position.x);
     }
 
-    // Remover todos os objetos criados anteriormente e limpar a lista de nós
     private void ResetNodes()
     {
         foreach (GameObject node in nodeList)
@@ -119,9 +113,5 @@ public class DuplicateNode : MonoBehaviour
             Destroy(node);
         }
         nodeList.Clear();
-        textCounter = 1; // Reiniciar o contador para 1
-        textCounter2 = 1;
-        lastNodeVector = initialPosition; // Voltar à posição inicial de criação
-        lastNodeVector2 = initialPosition;
     }
 }
