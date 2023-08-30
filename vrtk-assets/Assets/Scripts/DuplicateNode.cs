@@ -31,7 +31,10 @@ public class DuplicateNode : MonoBehaviour
         {
             CreateNewNode(Insertion.LAST);
         }
-
+        if (Input.GetKeyDown(KeyCode.Y))
+        {
+            ResetNodes();
+        }
         // Check if the user pressed "R" to duplicate the node on the opposite side
         if (Input.GetKeyDown(KeyCode.R))
         {
@@ -57,54 +60,67 @@ public class DuplicateNode : MonoBehaviour
 
     private void CreateNewNode(Insertion insertionType)
     {
-        print("CreateNewNode\n");
-        if (nodeList.Count == 10)
-            ResetNodes();
+    print("CreateNewNode\n");
+    if (nodeList.Count == 10)
+        ResetNodes();
 
-        GameObject newNode = Instantiate(node, firstNodeVector, Quaternion.identity);
-        newNode.SetActive(true);
-        newNode.transform.parent = transform;
-        newNode.name = "Node" + nodeList.Count;
+    GameObject newNode = Instantiate(node, firstNodeVector, Quaternion.identity);
+    newNode.SetActive(true);
+    newNode.transform.parent = transform;
+    newNode.name = "Node" + nodeList.Count;
 
-        TMP_Text newTextComponent = newNode.GetComponentInChildren<TMP_Text>();
-        if (newTextComponent != null)
+    TMP_Text newTextComponent = newNode.GetComponentInChildren<TMP_Text>();
+    if (newTextComponent != null)
+    {
+        if (!string.IsNullOrEmpty(userInputField.text))
         {
-            if (!string.IsNullOrEmpty(userInputField.text))
+            newTextComponent.text = userInputField.text;
+            userInputField.text = "";
+        }
+        else
+        {
+            newTextComponent.text = nodeList.Count.ToString();
+        }
+    }
+
+    switch (insertionType)
+    {
+        case Insertion.FIRST:
+            nodeList.Insert(0, newNode);
+            break;
+        case Insertion.LAST:
+            nodeList.Add(newNode);
+            break;
+        case Insertion.ORDERED:
+            TMP_Text newTextComponentOrder = newNode.GetComponentInChildren<TMP_Text>();
+            int indexToInsert = -1;
+            for (int i = 0; i < nodeList.Count; i++) 
             {
-                newTextComponent.text = userInputField.text;
-                userInputField.text = "";
+                TMP_Text textComponent = nodeList[i].GetComponentInChildren<TMP_Text>();
+                if (textComponent != null && int.Parse(newTextComponentOrder.text) < int.Parse(textComponent.text))
+                {
+                    indexToInsert = i;
+                    break;
+                }
+            }
+
+            if (indexToInsert != -1)
+            {
+                nodeList.Insert(indexToInsert, newNode);
             }
             else
             {
-                newTextComponent.text = nodeList.Count.ToString();
+                nodeList.Add(newNode); // Adicionar no final se não encontrou um índice para inserção
             }
-        }
-
-        switch (insertionType)
-        {
-            case Insertion.FIRST:
-                nodeList.Insert(0, newNode);
-                break;
-            case Insertion.LAST:
-                nodeList.Add(newNode);
-                break;
-            case Insertion.ORDERED:
-                for (int i = 0; i < nodeList.Count; i++)
-                {
-                    TMP_Text textComponent = nodeList[i].GetComponentInChildren<TMP_Text>();
-                    if (textComponent != null && int.Parse(newTextComponent.text) < int.Parse(textComponent.text))
-                    {
-                        nodeList.Insert(i, newNode);
-                        break;
-                    }
-                }
-                break;
-        }
-
-        UpdateNodePosition();
-        Debug.Log("NewNode: " + newNode.name + " " + newNode.transform.position.x);
-        Debug.Log("nodeList[0]: " + nodeList[0].name + " " + nodeList[0].transform.position.x);
+            break;
+            
     }
+
+    UpdateNodePosition();
+    Debug.Log("NewNode: " + newNode.name + " " + newNode.transform.position.x);
+    Debug.Log("nodeList[0]: " + nodeList[0].name + " " + nodeList[0].transform.position.x);
+    }
+
 
     private void ResetNodes()
     {
