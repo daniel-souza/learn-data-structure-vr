@@ -7,11 +7,13 @@ public class DuplicateNode : MonoBehaviour
 {
     public GameObject node;
     public TMP_InputField userInputField; // Reference to the Unity InputField where the user types the text
+    public TMP_Text validationMessage; // Reference to the Unity Text where the validation message is displayed
+    public LinkedListOptions linkedListOptionsScript; // Reference to the MyScript script
 
     private Vector3 firstNodeVector;
     private List<GameObject> nodeList = new List<GameObject>();
 
-    private enum Insertion
+    public enum Operation
     {
         FIRST,
         LAST,
@@ -26,24 +28,7 @@ public class DuplicateNode : MonoBehaviour
 
     void Update()
     {
-        // Check if the user pressed "T" to create the node
-        if (Input.GetKeyDown(KeyCode.T))
-        {
-            CreateNewNode(Insertion.LAST);
-        }
-        if (Input.GetKeyDown(KeyCode.Y))
-        {
-            ResetNodes();
-        }
-        // Check if the user pressed "R" to duplicate the node on the opposite side
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            CreateNewNode(Insertion.FIRST);
-        }
-        if (Input.GetKeyDown(KeyCode.O))
-        {
-            CreateNewNode(Insertion.ORDERED);
-        }
+        
     }
 
     private void UpdateNodePosition()
@@ -54,75 +39,101 @@ public class DuplicateNode : MonoBehaviour
             nodeList[i].transform.position = new Vector3(nodeList[i - 1].transform.position.x - 0.659f, nodeList[i].transform.position.y, nodeList[i].transform.position.z);
         }
         
-        print("UpdateNodePosition["+0+"]: " + nodeList[0].name + " " + nodeList[0].transform.position.x + "\n"
-             + "UpdateNodePosition["+(nodeList.Count-1)+"]: " + nodeList[nodeList.Count-1].name + " " + nodeList[nodeList.Count-1].transform.position.x + "\n");
+        // print("UpdateNodePosition["+0+"]: " + nodeList[0].name + " " + nodeList[0].transform.position.x + "\n"
+        //      + "UpdateNodePosition["+(nodeList.Count-1)+"]: " + nodeList[nodeList.Count-1].name + " " + nodeList[nodeList.Count-1].transform.position.x + "\n");
     }
 
-    private void CreateNewNode(Insertion insertionType)
+    public void CreateNewNode(Operation OperationType)
     {
-    print("CreateNewNode\n");
-    if (nodeList.Count == 10)
-        ResetNodes();
-
-    GameObject newNode = Instantiate(node, firstNodeVector, Quaternion.identity);
-    newNode.SetActive(true);
-    newNode.transform.parent = transform;
-    newNode.name = "Node" + nodeList.Count;
-
-    TMP_Text newTextComponent = newNode.GetComponentInChildren<TMP_Text>();
-    if (newTextComponent != null)
-    {
-        if (!string.IsNullOrEmpty(userInputField.text))
+        // input validation
+        int newNodeNumber;
+        if (string.IsNullOrEmpty(userInputField.text) || !int.TryParse(userInputField.text, out newNodeNumber))
         {
-            newTextComponent.text = userInputField.text;
-            userInputField.text = "";
+            validationMessage.text = "Please enter a valid number";
+            return;
         }
-        else
+       
+        if (nodeList.Count == 10)
         {
-            newTextComponent.text = nodeList.Count.ToString();
+            validationMessage.text = "The list is full";
+            return;
         }
-    }
+        
+        validationMessage.text = "";
 
-    switch (insertionType)
-    {
-        case Insertion.FIRST:
-            nodeList.Insert(0, newNode);
-            break;
-        case Insertion.LAST:
-            nodeList.Add(newNode);
-            break;
-        case Insertion.ORDERED:
-            TMP_Text newTextComponentOrder = newNode.GetComponentInChildren<TMP_Text>();
-            int indexToInsert = -1;
-            for (int i = 0; i < nodeList.Count; i++) 
-            {
-                TMP_Text textComponent = nodeList[i].GetComponentInChildren<TMP_Text>();
-                if (textComponent != null && int.Parse(newTextComponentOrder.text) < int.Parse(textComponent.text))
+        GameObject newNode = Instantiate(node, firstNodeVector, Quaternion.identity);
+        newNode.SetActive(true);
+        newNode.transform.parent = transform;
+        newNode.name = "Node" + nodeList.Count;
+
+        newNode.GetComponentInChildren<TMP_Text>().text = userInputField.text;
+        userInputField.text = "";
+        int index = 0;
+        switch (OperationType)
+        {
+            case Operation.FIRST:
+                nodeList.Insert(0, newNode);
+                break;
+            case Operation.LAST:
+                nodeList.Add(newNode);
+                break;
+            case Operation.ORDERED:
+                for (; index < nodeList.Count; index++) 
                 {
-                    indexToInsert = i;
-                    break;
+                    int nodeNumber = int.Parse(nodeList[index].GetComponentInChildren<TMP_Text>().text);
+                    if (newNodeNumber < nodeNumber)
+                    {
+                        break;
+                    }
                 }
-            }
-
-            if (indexToInsert != -1)
-            {
-                nodeList.Insert(indexToInsert, newNode);
-            }
-            else
-            {
-                nodeList.Add(newNode); // Adicionar no final se não encontrou um índice para inserção
-            }
-            break;
-            
+                nodeList.Insert(index, newNode);
+                break;
+                
+        }
+        UpdateNodePosition();
     }
 
-    UpdateNodePosition();
-    Debug.Log("NewNode: " + newNode.name + " " + newNode.transform.position.x);
-    Debug.Log("nodeList[0]: " + nodeList[0].name + " " + nodeList[0].transform.position.x);
+    public void deleteNode(int index)
+    {
+        if (nodeList.Count == 0)
+        {
+            validationMessage.text = "The list is empty";
+            return;
+        }
+        if(index < 0 || index >= nodeList.Count)
+        {
+            validationMessage.text = "Please enter a valid index";
+            return;
+        }
+        validationMessage.text = "";
+        Destroy(nodeList[index]);
+        nodeList.RemoveAt(index);
+        UpdateNodePosition();
     }
 
+    public void deleteNode(Operation OperationType)
+    {
+        // exception handling
+        if (nodeList.Count == 0)
+        {
+            validationMessage.text = "The list is empty";
+            return;
+        }
 
-    private void ResetNodes()
+        switch(OperationType)
+        {
+            case Operation.FIRST:
+                Destroy(nodeList[0]);
+                nodeList.RemoveAt(0);
+                break;
+            case Operation.LAST:
+                Destroy(nodeList[nodeList.Count - 1]);
+                nodeList.RemoveAt(nodeList.Count - 1);
+                break;
+        }
+    }
+    
+    public void ResetNodes()
     {
         foreach (GameObject node in nodeList)
         {
