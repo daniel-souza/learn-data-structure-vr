@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\Scripts\ToggleUI.cs" />
+     <Compile Include="Assets\Scripts\LinkedListOptions.cs" />
      <Compile Include="Assets\pixel horror abandoned classroom\scripts\PlayerMovement.cs" />
      <Compile Include="Assets\Scripts\DuplicateNode.cs" />
      <Compile Include="Assets\pixel horror abandoned classroom\scripts\MouseLook.cs" />

@@ -107,6 +107,17 @@ public class LinkedListOptions : MonoBehaviour
                 nodeInputField.gameObject.SetActive(false);
                 indexInputField.gameObject.SetActive(true);
             }
+            else if(value == 3)
+            {
+                Debug.Log("Update node");
+                begginingToggle.gameObject.SetActive(true);
+                indexToggle.isOn = true;
+                endingToggle.gameObject.SetActive(true);
+                indexToggle.gameObject.SetActive(true);
+                orderedToggle.gameObject.SetActive(false);
+                nodeInputField.gameObject.SetActive(true);
+                indexInputField.gameObject.SetActive(true);
+            }
         });
 
     }
@@ -135,7 +146,8 @@ public class LinkedListOptions : MonoBehaviour
             {
                 duplicateNodeScript.validationMessage.text = "Please select an insertion type";
             }
-        } else if (operationsDropdownMenu.value == 2 && Input.GetKeyDown(KeyCode.Return))
+        } 
+        else if (operationsDropdownMenu.value == 2 && Input.GetKeyDown(KeyCode.Return))
         {
             // remove the return from indexInputField
             indexInputField.text = indexInputField.text.Replace("\r", "").Replace("\n", "");
@@ -146,6 +158,33 @@ public class LinkedListOptions : MonoBehaviour
             else if (endingToggle.isOn)
             {
                 duplicateNodeScript.deleteNode(DuplicateNode.Operation.LAST);
+            }
+            else if(indexToggle.isOn)
+            {
+                duplicateNodeScript.deleteNode2(int.Parse(indexInputField.text));
+                indexInputField.text = "";
+            }
+            else
+            {
+                duplicateNodeScript.validationMessage.text = "Please select a deletion type";
+            }
+        }
+        else if (operationsDropdownMenu.value == 3 && Input.GetKeyDown(KeyCode.Return))
+        {
+            // remove the return from indexInputField
+            indexInputField.text = indexInputField.text.Replace("\r", "").Replace("\n", "");
+            if (begginingToggle.isOn)
+            {
+                duplicateNodeScript.updatenode(DuplicateNode.Operation.FIRST);
+            }
+            else if (endingToggle.isOn)
+            {
+                duplicateNodeScript.updatenode(DuplicateNode.Operation.LAST);
+            }
+            else if (indexToggle.isOn)
+            {
+                duplicateNodeScript.updatenode2(int.Parse(indexInputField.text));
+                indexInputField.text = "";
             }
             else
             {

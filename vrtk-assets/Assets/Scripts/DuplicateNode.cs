@@ -93,7 +93,7 @@ public class DuplicateNode : MonoBehaviour
         UpdateNodePosition();
     }
 
-    public void deleteNode(int index)
+    public void deleteNode2(int index)
     {
         if (nodeList.Count == 0)
         {
@@ -132,9 +132,53 @@ public class DuplicateNode : MonoBehaviour
                 break;
         }
     }
+
+    public void updatenode2(int index)
+    {
+        if (nodeList.Count == 0)
+        {
+            validationMessage.text = "The list is empty";
+            return;
+        }
+        if (index < 0 || index >= nodeList.Count)
+        {
+            validationMessage.text = "Please enter a valid index";
+            return;
+        }
+        validationMessage.text = "";
+        nodeList[index].GetComponentInChildren<TMP_Text>().text = userInputField.text;
+        userInputField.text = "";
+    }
     
+    public void updatenode(Operation OperationType)
+    {
+        // exception handling
+        if (nodeList.Count == 0)
+        {
+            validationMessage.text = "The list is empty";
+            return;
+        }
+
+        switch (OperationType)
+        {
+            case Operation.FIRST:
+                nodeList[0].GetComponentInChildren<TMP_Text>().text = userInputField.text;
+                userInputField.text = "";
+                break;
+            case Operation.LAST:
+                nodeList[nodeList.Count - 1].GetComponentInChildren<TMP_Text>().text = userInputField.text;
+                userInputField.text = "";
+                break;
+        }
+    }
     public void ResetNodes()
     {
+        if(nodeList.Count == 0)
+        {
+            validationMessage.text = "The list is already empty";
+            return;
+        }
+
         foreach (GameObject node in nodeList)
         {
             Destroy(node);
