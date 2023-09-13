@@ -131,6 +131,7 @@ public class DuplicateNode : MonoBehaviour
                 nodeList.RemoveAt(nodeList.Count - 1);
                 break;
         }
+        UpdateNodePosition();
     }
 
     public void updatenode2(int index)
